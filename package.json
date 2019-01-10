@@ -1,0 +1,20 @@
+{
+  "name": "porject_4",
+  "version": "1.0.0",
+  "description": "Private Blockchain Notary Service",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bitcoinjs-lib": "^4.0.2",
+    "bitcoinjs-message": "^2.0.0",
+    "crypto-js": "^3.1.9-1",
+    "express.js": "^1.0.0",
+    "fs-extra": "^7.0.1",
+    "hex2ascii": "0.0.3",
+    "level": "^4.0.0"
+  }
+}
