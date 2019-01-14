@@ -91,7 +91,7 @@ function getDBdataArray(){
         var dataArray=[];
         db.createReadStream()
             .on('data', function (data) {
-                dataArray.push(JSON.parse(data));
+                dataArray.push(data);
             })
             .on('error', function (err) {
                 reject(err)
@@ -102,7 +102,7 @@ function getDBdataArray(){
         });
 }
 
-function removeDB() {
+function removeDBs() {
   fs.remove(chainDB, err => {
     console.error(err)
   })
@@ -114,6 +114,28 @@ function removeDB() {
   })
 }
 
+function findHashonChain(hash){
+  let self = this;
+  return new Promise(function(resolve, reject) {
+        var block = ""
+        db.createValueStream()
+          .on('data', function (data) {
+             let resp  = JSON.parse(data);
+             if(resp.hash === hash){  // check if entry matches the hash
+                block = resp;
+             }
+           })
+           .on('error', function (err) {
+               reject({ type: err });
+          }).on('close', function () {
+              if(block.hash){
+                resolve(block);
+              }else{
+                resolve("This hash doesn't exist in the blockchain!")
+              }
+          });
+    });
+}
 /*==Adding Star Data in Database for persistently storing each request==
 =======================================================================*/
 
@@ -131,7 +153,6 @@ function addValidationRequestMempool(key,value){
       });
   });
 }
-
 /*==========Getting Star Data from Database for each request===========
 =======================================================================*/
 function getStarAddressData(key){
@@ -188,7 +209,7 @@ function addValidationRequest(key,value){
               reject(err);
           }
           console.log('teomavstar'+key)
-          console.log('Validation Submission Succeedded for Wallet Address:' + key + '  with data:' + value);
+          console.log('Validation Submission Succeedded for Wallet Address:' + key );
           resolve(value);
       });
   });
@@ -208,6 +229,20 @@ function getValidationRequest(key){
             }
         });
     })
+}
+/*==========Deleting Star Data from Database based on Wallet Address===
+=======================================================================*/
+async function deleteValidation(key) {
+    return new Promise(function(resolve, reject) {
+        try {
+            validspool.del(key);
+            resolve('Successful Deletion!');
+            console.log('Successful Deletion of validation!');
+        } catch (err) {
+            console.log('Error: ' + err);
+            reject(err);
+        }
+    });
 }
 /* ===== Testing ==============================================================|
 |  - Self-invoking function to add blocks to chain                             |
@@ -249,10 +284,12 @@ module.exports = {
 	getBlocksCount: getBlocksCount,
 	getDBdataArray: getDBdataArray,
 	addDataToLevelDB: addDataToLevelDB,
-	removeDB: removeDB,
+	removeDBs: removeDBs,
   addValidationRequestMempool: addValidationRequestMempool,
   getStarAddressData: getStarAddressData,
   deleteStarRegistryData: deleteStarRegistryData,
   addValidationRequest: addValidationRequest,
-  getValidationRequest: getValidationRequest
+  getValidationRequest: getValidationRequest,
+  deleteValidation: deleteValidation,
+  findHashonChain: findHashonChain
 }

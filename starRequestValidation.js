@@ -1,5 +1,5 @@
 
-const {addValidationRequestMempool, getStarAddressData, deleteStarRegistryData, addValidationRequest, getValidationRequest} = require('./levelSandbox');
+const {addValidationRequestMempool, getStarAddressData, deleteStarRegistryData, addValidationRequest, getValidationRequest, deleteValidation} = require('./levelSandbox');
 
 const TimeoutRequestsWindowTime = 5*60*1000;
 var mempool = new Array();
@@ -15,7 +15,7 @@ async function addRequestValidation(walletAddress){
         console.log("The address already exists. Not a new request will be made!!")
 
         let timeElapsed = Date.now() - data.requestTimeStamp;
-        let newValidationWindow = (300000 - timeElapsed)/1000;
+        let newValidationWindow = (TimeoutRequestsWindowTime - timeElapsed)/1000;
         let str_a = newValidationWindow.toString();
         let resultNewValidationWindow = Number(str_a.slice(0, 3));
         let starStructure = {
@@ -25,13 +25,14 @@ async function addRequestValidation(walletAddress){
           validationWindow: resultNewValidationWindow
         }
         await deleteStarRegistryData(walletAddress);
-        await addValidationRequestMempool(walletAddress, JSON.stringify(starStructure).toString());
+        await addValidationRequestMempool(walletAddress, JSON.stringify(starStructure));
 
         return starStructure;
       }).catch(async (err)=>{
         console.log(err);
         let timestamp = getTimeStamp()
         let message = walletAddress+':'+timestamp+':starRegistry';
+        //In the timeoutRequests array, stores a timeout for each request and upon expiration after 5 minutes, it remove the request from the mempool database
         timeoutRequests[walletAddress]=setTimeout(function(){ removeValidationRequest(walletAddress) }, TimeoutRequestsWindowTime );
 
         let starStructure = {
@@ -41,7 +42,7 @@ async function addRequestValidation(walletAddress){
           validationWindow: (TimeoutRequestsWindowTime/1000)
         }
 
-        await addValidationRequestMempool(walletAddress, JSON.stringify(starStructure).toString());
+        await addValidationRequestMempool(walletAddress, JSON.stringify(starStructure));
         check = false;
         return starStructure;
       });
@@ -73,6 +74,7 @@ async function validateRequestByWallet(walletAddress, signature){
           await removeValidationRequest(walletAddress);
           timeoutRequests.splice(walletAddress,1);
           await addValidationRequest(walletAddress, validRequest)
+          console.log(validRequest)
           return validRequest;
         }else{
           return "The signature isn't valid! You can't validate the request!"
@@ -86,6 +88,8 @@ async function validateRequestByWallet(walletAddress, signature){
 async function addStarDatatoBlock(structure){
     let walletAddress = structure.address
     return await getValidationRequest(walletAddress).then(async (data)=>{
+      console.log(data)
+      await deleteValidation(walletAddress); //deletes the validation from the datadabe, so the user has to submit a request again to notarize a new star
       return true;
     }).catch(async (err)=>{
       return false;

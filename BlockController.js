@@ -38,7 +38,7 @@ class BlockController {
           try{
             let blockheight = req.params.index;
 
-            let block = await this.blockchain.getBlockbyHeight(blockheight);
+            const block = await this.blockchain.getBlockbyIndex(blockheight);
             //console.log(block)
             res.status(200).send(block)
           }catch(err){
@@ -64,61 +64,75 @@ class BlockController {
 
     validateRequest() {
       this.app.post("/message-signature/validate", async (req, res) => {
-        let validation = await this.validateRequestByWallet(req.body.address, req.body.signature);
-        res.status(200).send(validation);
+        try{
+          let validation = await this.validateRequestByWallet(req.body.address, req.body.signature);
+          res.status(200).send(validation);
+        }catch(err){
+          res.status(400).send(err);
+        }
       });
     }
 
 
     /**
-     * Implement a POST Endpoint to add a new Block, url: "/api/block"
+     * Implement a POST Endpoint to add a new Block with stars' coordinates, url: "/api/block"
      */
     postNewBlockwithStar() {
         this.app.post("/block", async (req, res) => {
           try{
-            // Add your code here
+            let right_ascension = req.body.ra
+            let declination = req.body.dec
+            let walletAddress = req.body.address
+            let starStory = req.body.story
+            console.log(right_ascension)
+            console.log(declination)
+            console.log(walletAddress)
+            console.log(starStory)
 
-            let structure = {
-              address: req.body.address,
-              star: {
-                dec: req.body.dec,
-                ra: req.body.ra,
-                story: new Buffer(req.body.story).toString('hex')
+            if (right_ascension!="" & declination!="" & walletAddress!="" & starStory!=""){
+              let structure = {
+                address: walletAddress,
+                star: {
+                  dec: declination,
+                  ra: right_ascension,
+                  story: new Buffer(starStory).toString('hex')
+                }
               }
+              if(structure){
+                let response = await addStarDatatoBlock(structure)
+                if(response){//if true then adds the star to a new block in the chain
+                  let block = await this.blockchain.addBlock(new Block(structure));
+                  res.status(200).send(JSON.parse(block));
+                }else{//
+                  res.status(400).send("The block couldn't be added in the blockchain due to absense of validation!!");
+                }
+            }else{
+              res.status(400).send("POST Request without certain parameters! You should put dec, ra and story parameters!");
             }
-            console.log(new Buffer(req.body.story).toString('hex'));
-            if(structure){
-              let response = await addStarDatatoBlock(structure)
-              if(response){
-                let block = await this.blockchain.addBlock(new Block(structure));
-                res.status(200).send(JSON.parse(block));
-              }else{
-                res.status(400).send("The block couldn't be added in the blockchain due to absense of validation!!");
-              }
             }else{
               res.status(400).send("POST Request without data on the body!");
             }
           }catch(err){
             console.log(err);
-
           }
         });
     }
 
     getBlockbyHash(){
-      this.app.post("/stars/hash:hashValue", async (req, res) => {
+      this.app.get("/stars/hash:hashValue", async (req, res) => {
         let hash = (req.params.hashValue).toString().slice(1);
-        await this.blockchain.getBlockByHash(hash).then((block)=>{
+        try{
+          let block = await this.blockchain.getBlockByHash(hash);
           res.status(200).send(block);
-        }).catch((err)=>{
+        }catch(err){
           res.status(400).send("Error feching the block!!");
-        });
+        }
 
       });
     }
 
     getBlockbyWalletAddress(){
-      this.app.post("/stars/address:walletAddress", async (req, res) => {
+      this.app.get("/stars/address:walletAddress", async (req, res) => {
         let walletAddress = (req.params.walletAddress).toString().slice(1);
         await this.blockchain.getBlockByAddress(walletAddress).then((blockArray)=>{
           res.status(200).send(blockArray);

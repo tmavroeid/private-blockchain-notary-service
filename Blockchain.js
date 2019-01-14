@@ -1,7 +1,7 @@
 /* ===== functions on levelSandbox.js ==============================================================================
 |  Include functions or a pointer to levelSandbox.js in order to persist data and interact with database in levelDB|
 |  ===============================================================================================================*/
-const {db, addLevelDBData, getLevelDBData, addDataToLevelDB, getBlocksCount, getDBdataArray, removeDB} = require('./levelSandbox');
+const {db, addLevelDBData, getLevelDBData, addDataToLevelDB, getBlocksCount, getDBdataArray, removeDBs, findHashonChain} = require('./levelSandbox');
 //const level = require('./levelSandbox.js');
 const Block = require('./Block')
 // const level = require('level');
@@ -26,10 +26,8 @@ class Blockchain{
 
 	async generateGenesisBlock(){
 						let array = await getDBdataArray();
-						// for (var g=0;g<=array.length;g++){
-						// 	this.chain.push(JSON.parse(array[g].value));
-						// }
-            await removeDB();
+
+            await removeDBs();
 
 						if (array.length==0){
 
@@ -49,6 +47,7 @@ class Blockchain{
 	    newBlock.time = new Date().getTime().toString().slice(0,-3);
 	    // previous block hash
 	    if(this.chain.length>0){
+        console.log(this.chain[this.chain.length-1].hash);
 	      newBlock.previousBlockHash = this.chain[this.chain.length-1].hash;
 	    }
 	    // Block hash with SHA256 using newBlock and converting to a string
@@ -56,7 +55,7 @@ class Blockchain{
 		  // Adding block object to chain
 		 	this.chain.push(newBlock);
 			// Persist block object to database
-			return await addLevelDBData(newBlock.height, JSON.stringify(newBlock).toString())
+			return await addLevelDBData(newBlock.height, JSON.stringify(newBlock))
 
   }
 
@@ -77,27 +76,33 @@ class Blockchain{
 async getBlockbyHeight(height){
   // return block object from the database
   let block = await this.getBlock(height);
-  block.body.star.storyDecoded = Buffer.from(block.body.star.story, 'hex').toString()
   return block;
+}
+async getBlockbyIndex(height){
+  // return block object from the database
+  let block = await this.getBlock(height);
+  if(height!=0){
+    block.body.star.storyDecoded = Buffer.from(block.body.star.story, 'hex').toString()
+    return block;
+  }else{
+    return block;
+  }
+
 }
 // Get block by hash
 async getBlockByHash(hash) {
         try {
             // Get block height
-            let height = await this.getBlockHeight();
-            for (var i = 1; i <= height; i++) {
-                // Get block
-                let block = await this.getBlock(i);
-                // Check if hash matches
-                if (block.hash == hash) {
-                    // Decode the story
-                    block.body.star.storyDecoded = Buffer.from(block.body.star.story, 'hex').toString()
-                    // Return block
-                    return block;
+              return await findHashonChain(hash).then((response)=>{
+                if(response.hash){
+                  response.body.star.storyDecoded = Buffer.from(response.body.star.story, 'hex').toString()
+                  return response;
                 }else{
-                    return "The hash does not exist in any block!!"
+                  return "This hash doesn't exist in any block!";
                 }
-            }
+            }).catch((err)=>{
+              return err;
+            });
 
         } catch (err) {
             console.log(err);
