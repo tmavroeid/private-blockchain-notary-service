@@ -2,17 +2,17 @@
 
 Blockchain has the potential to change the way that the world approaches data. Inside this project exists a simplified private blockchain where a consensus isn't existent and the blocks have a pretty basic structure.
 
-In this project a RESTful web API with the Node.js Framework, _Express.js_, is deployed in order to interact with the simplified private blockchain and store information about stars such as their _right ascension_, _declination_ and _story_. The process of storing and retrieving information, to and by the blockchain about the stars is succeedded by requesting the capability to post a star and validating the message of the response.
+In this project a RESTful web API with the Node.js Framework, _Express.js_, is deployed in order to interact with the simplified private blockchain and store information about stars such as their _right ascension_, _declination_ and _story_. The process of storing and retrieving information, to and by the blockchain about the stars is succeedded by requesting the capability to post a star, validating the message of the response and then submitting a star.
 
 ##### Basic endpoints consisting the web API in NODE.js are separated in the following categories:
-___*Blockchain ID validation routine___
+___Blockchain ID validation routine___
 - _POST_ endpoint to validate request with JSON response,
 - _POST_ endpoint to validate message signature with JSON response.
 
-___*Star registration Endpoint___
+___Star registration Endpoint___
 - _POST_ endpoint to submit the Star information to be saved in the Blockchain.
 
-___*Star Lookup in the Blockchain___
+___Star Lookup in the Blockchain___
 - _GET_ endpoint to get Star block by hash with JSON response.
 - _GET_ endpoint to get Star block by wallet address (blockchain identity) with JSON response.
 - _GET_ endpoint to get star block by star block height with JSON response.
