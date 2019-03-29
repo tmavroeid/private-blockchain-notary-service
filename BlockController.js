@@ -28,6 +28,7 @@ class BlockController {
         this.validateRequest();
         this.getBlockbyHash();
         this.getBlockbyWalletAddress();
+        this.validateChain();
     }
 
     /**
@@ -141,6 +142,22 @@ class BlockController {
         });
 
       });
+    }
+
+    validateChain(){
+      this.app.post("/blockchain/validate", async (req, res) => {
+          await this.blockchain.validateChain().then((errors)=>{
+              console.log(errors+"hello");
+              if(errors){
+                res.status(200).send("The blockchain is valid!");
+              }else{
+                res.status(400).send("The blockchain is invalid!")
+              }
+          }).catch((err)=>{
+              res.status(400).send("Error in the process of validating the chain!:(");
+          });
+      });
+
     }
     /**
      * Help method to inizialized Mock dataset, adds 10 test blocks to the blocks array

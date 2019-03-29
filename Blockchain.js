@@ -171,6 +171,7 @@ async getBlockByAddress(walletAddress) {
 
    // Validate blockchain
   async validateChain(){
+    return new Promise((resolve, reject) => {
       let errorLog = [];
 			//Create the promises array in order to store the calls to validateBlock()
 			let promises = [];
@@ -201,16 +202,17 @@ async getBlockByAddress(walletAddress) {
 				if (errorLog.length>0) {
 					console.log('Block errors = ' + errorLog.length);
 					console.log('Blocks: '+errorLog);
-					return false
+					resolve(false);
 				} else {
 					console.log('No errors detected');
-					return true;
+					resolve(true);
 				}
 			}).catch((err)=>{
 				console.log(err);
+        resolve(false);
 			});
 
-
+    });
 
 
     }

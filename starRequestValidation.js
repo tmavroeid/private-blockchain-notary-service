@@ -95,6 +95,7 @@ async function addStarDatatoBlock(structure){
       return false;
     });
 }
+
   module.exports = {
     addRequestValidation: addRequestValidation,
     validateRequestByWallet: validateRequestByWallet,
